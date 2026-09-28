@@ -1,0 +1,1013 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>228i xDrive Ownership Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: service-logbook tool — sticky control column on the left, instrument readouts and charts on the right; stacks to one column on phones. */
+:root {
+  --ground: #edf0f2;
+  --surface: #fbfcfc;
+  --surface-2: #f2f4f6;
+  --ink: #111a22;
+  --ink-2: #46525e;
+  --muted: #76828d;
+  --rule: #d6dce1;
+  --rule-strong: #b9c2ca;
+  --amber: #a85f00;
+  --amber-soft: #f6e6cf;
+  --line-ref: #9aa5af;
+  --bar: #5f6f7e;
+  --c-dep: #2a78d6; --c-fuel: #eb6834; --c-maint: #1baf7a; --c-wear: #eda100;
+  --c-rep: #e87ba4; --c-ins: #008300; --c-cap: #4a3aa7;
+  --good: #0b7a0b;
+  --bad: #b83232;
+  --font-display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1318; --surface: #151b21; --surface-2: #1b232a; --ink: #e8edf1; --ink-2: #b2bdc7;
+    --muted: #7f8c97; --rule: #28323b; --rule-strong: #3a4651; --amber: #f2a33a; --amber-soft: #3a2a14;
+    --line-ref: #5d6975; --bar: #93a3b2;
+    --c-dep: #3987e5; --c-fuel: #d95926; --c-maint: #199e70; --c-wear: #c98500;
+    --c-rep: #d55181; --c-ins: #2a9a2a; --c-cap: #9085e9; --good: #3cc43c; --bad: #ef7373;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1318; --surface: #151b21; --surface-2: #1b232a; --ink: #e8edf1; --ink-2: #b2bdc7;
+  --muted: #7f8c97; --rule: #28323b; --rule-strong: #3a4651; --amber: #f2a33a; --amber-soft: #3a2a14;
+  --line-ref: #5d6975; --bar: #93a3b2;
+  --c-dep: #3987e5; --c-fuel: #d95926; --c-maint: #199e70; --c-wear: #c98500;
+  --c-rep: #d55181; --c-ins: #2a9a2a; --c-cap: #9085e9; --good: #3cc43c; --bad: #ef7373;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+a { color: inherit; text-decoration-color: var(--rule-strong); text-underline-offset: 2px; }
+a:hover { text-decoration-color: var(--amber); }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* Header */
+.head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px 32px; align-items: end; padding-bottom: 22px; border-bottom: 1px solid var(--rule-strong); margin-bottom: 24px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.head h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1; font-weight: 700; }
+.spec { color: var(--ink-2); margin-top: 8px; max-width: 62ch; }
+.odos { display: flex; gap: 12px; flex-wrap: wrap; }
+.odo { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 10px 14px; min-width: 176px; }
+.odo .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.odo .digits { font-family: var(--font-mono); font-size: 22px; font-weight: 500; letter-spacing: 0.06em; color: var(--amber); line-height: 1.3; }
+.odo .sub { font-size: 13px; color: var(--ink-2); }
+
+.layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } .head { grid-template-columns: minmax(0, 1fr); } }
+
+/* Controls */
+.controls { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 18px 8px; scrollbar-width: thin; }
+@media (max-width: 980px) { .controls { position: static; max-height: none; } }
+.group { display: grid; gap: 14px; padding-bottom: 18px; margin-bottom: 16px; border-bottom: 1px solid var(--rule); }
+.group:last-of-type { border-bottom: 0; }
+.group h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); font-weight: 600; }
+.field { display: grid; gap: 5px; }
+.field .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.field label, .field .lab { font-size: 14px; font-weight: 600; }
+.field output, .field .val { font-family: var(--font-mono); font-size: 14px; color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.hint { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+input[type=range] { width: 100%; accent-color: var(--amber); height: 22px; margin: 0; }
+input[type=number] { width: 100%; font: 500 15px var(--font-mono); padding: 7px 9px; border: 1px solid var(--rule-strong); border-radius: 5px; background: var(--surface-2); color: var(--ink); }
+input[type=number]:focus { border-color: var(--amber); outline: none; }
+.seg { display: flex; border: 1px solid var(--rule-strong); border-radius: 5px; overflow: hidden; }
+.seg button { flex: 1 1 0; min-width: 0; font: 600 13px var(--font-body); padding: 7px 4px; background: var(--surface-2); color: var(--ink-2); border: 0; border-right: 1px solid var(--rule-strong); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.check { display: flex; gap: 9px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { margin-top: 3px; accent-color: var(--amber); width: 16px; height: 16px; flex: none; }
+details.adv > summary { cursor: pointer; font-family: var(--font-display); font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+details.adv > summary::after { content: "+"; font-family: var(--font-mono); color: var(--muted); }
+details.adv[open] > summary::after { content: "−"; }
+details.adv[open] > summary { margin-bottom: 14px; }
+.btn { font: 600 13px var(--font-body); padding: 8px 12px; border-radius: 5px; border: 1px solid var(--rule-strong); background: var(--surface-2); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--amber); }
+
+/* Results */
+.results { display: grid; gap: 24px; min-width: 0; }
+.verdict { font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; font-weight: 500; max-width: 40ch; }
+.verdict b { font-weight: 700; color: var(--amber); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .tiles .tile:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.tile { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.tile .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
+.tile .v { font-family: var(--font-display); font-size: 30px; font-weight: 600; line-height: 1.1; }
+.tile .s { font-size: 13px; color: var(--ink-2); }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 18px 14px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; margin-bottom: 4px; }
+.panel h2 { font-size: 24px; }
+.panel .lede { color: var(--ink-2); font-size: 14px; margin: 2px 0 12px; max-width: 75ch; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-family: var(--font-body); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend .ln { width: 16px; height: 0; border-top: 2px solid; border-radius: 0; }
+.legend b { font-family: var(--font-mono); font-weight: 500; color: var(--ink); font-size: 12.5px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 13px; line-height: 1.4; padding: 8px 10px; border-radius: 5px; min-width: 150px; max-width: 240px; z-index: 5; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.tip .t { font-weight: 700; margin-bottom: 2px; }
+.tip .r { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 12px; }
+.two { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 1180px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+/* Heatmap */
+.hm-wrap { overflow-x: auto; }
+.hm { display: grid; gap: 2px; min-width: 460px; font-family: var(--font-mono); font-size: 12px; }
+.hm .h { color: var(--muted); text-align: center; padding: 4px 0; font-size: 11.5px; }
+.hm .rh { color: var(--muted); text-align: right; padding-right: 8px; align-self: center; font-size: 11.5px; white-space: nowrap; }
+.hm button.c { border: 0; border-radius: 3px; padding: 8px 2px; font: 500 12px var(--font-mono); cursor: pointer; font-variant-numeric: tabular-nums; }
+.hm button.c.sel { outline: 2px solid var(--amber); outline-offset: 1px; position: relative; z-index: 1; }
+.scale { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 10px; font-family: var(--font-mono); }
+.scale .bar { flex: 1; height: 8px; border-radius: 4px; max-width: 220px; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+td { font-family: var(--font-mono); font-size: 13px; }
+th:first-child, td:first-child { text-align: left; }
+#splitTbl td:first-child { font-family: var(--font-body); font-size: 14px; }
+tfoot td { font-weight: 600; border-top: 1px solid var(--rule-strong); border-bottom: 0; }
+
+/* Repairs */
+.rep { display: grid; gap: 0; }
+.rep-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px 92px 80px; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--rule); }
+.rep-row.hdr > span { font-family: var(--font-body); font-size: 11.5px; }
+.rep-row.hdr { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; padding-top: 0; }
+.rep-row .nm { font-weight: 600; font-size: 14px; }
+.rep-row .nt { font-size: 12.5px; color: var(--muted); }
+.rep-row .fixed { font-size: 12.5px; color: var(--ink-2); display: inline-flex; gap: 5px; align-items: center; margin-top: 2px; cursor: pointer; }
+.rep-row .fixed input { accent-color: var(--amber); }
+.rep-row.is-new .nm { color: var(--muted); }
+.pbar { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12.5px; }
+.pbar > span:last-child { min-width: 3.2ch; text-align: right; }
+.pbar .track { flex: 1; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--rule); }
+.pbar .fill { height: 100%; background: var(--c-rep); border-radius: 0 4px 4px 0; }
+.rep-row .c, .rep-row .e { font-family: var(--font-mono); font-size: 13px; text-align: right; }
+@media (max-width: 620px) {
+  .rep-row { grid-template-columns: minmax(0, 1fr) 90px; }
+  .rep-row .c, .rep-row.hdr .c { display: none; }
+  .rep-row .pbar { grid-column: 1 / -1; order: 3; }
+}
+.recall { background: var(--amber-soft); border-radius: 5px; padding: 10px 12px; font-size: 13.5px; margin: 4px 0 12px; }
+.recall b { font-weight: 700; }
+
+/* Service log */
+.svc-list { display: grid; }
+.svc { display: grid; grid-template-columns: 84px 92px minmax(0, 1fr) 70px; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule); align-items: baseline; font-size: 13.5px; }
+.svc .d, .svc .km, .svc .co { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); }
+.svc .co { text-align: right; color: var(--ink); }
+.svc .nm { display: flex; gap: 7px; align-items: baseline; min-width: 0; }
+.svc .nm i { width: 8px; height: 8px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+@media (max-width: 520px) { .svc { grid-template-columns: 70px minmax(0, 1fr) 62px; } .svc .km { display: none; } }
+.donegrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 16px; margin: 6px 0 14px; }
+
+.insight { border-left: 3px solid var(--amber); padding: 4px 0 4px 12px; font-size: 14px; color: var(--ink-2); margin-top: 10px; max-width: 80ch; }
+.insight b { color: var(--ink); }
+.notes { font-size: 14px; color: var(--ink-2); display: grid; gap: 10px; }
+.notes h3 { font-size: 17px; color: var(--ink); margin-top: 6px; }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.foot { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <div class="eyebrow">2016 BMW 228i xDrive Coupe · F22 · N20 2.0L turbo · ZF 8-speed · AWD</div>
+      <h1>228i xDrive Ownership Planner</h1>
+      <p class="spec">Set how far you'll drive and how long you'll keep it. The model prices depreciation, premium fuel, BMW service, brakes and tires, likely N20 and xDrive repairs, and insurance in Canadian dollars at GTA prices (September 2026).</p>
+    </div>
+    <div class="odos" aria-live="polite">
+      <div class="odo"><div class="k">Today · Sept 2026</div><div class="digits" id="odoNow">056 000 km</div><div class="sub" id="odoNowV">Worth $18,500</div></div>
+      <div class="odo"><div class="k" id="odoEndK">When you sell</div><div class="digits" id="odoEnd">131 000 km</div><div class="sub" id="odoEndV">Worth $10,054</div></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="controls" aria-label="Inputs">
+      <section class="group">
+        <h3>Your driving</h3>
+        <div class="field">
+          <div class="row"><label for="kmPerYear">Kilometres per year</label><output id="kmPerYearOut" for="kmPerYear"></output></div>
+          <input type="range" id="kmPerYear" min="2000" max="50000" step="1000">
+          <div class="hint">Canadian average is about 15,000 km.</div>
+        </div>
+        <div class="field">
+          <div class="row"><label for="years">Years you'll keep it</label><output id="yearsOut" for="years"></output></div>
+          <input type="range" id="years" min="1" max="12" step="1">
+        </div>
+        <div class="field">
+          <div class="row"><label for="cityShare">City driving</label><output id="cityShareOut" for="cityShare"></output></div>
+          <input type="range" id="cityShare" min="0" max="100" step="5">
+        </div>
+        <div class="field">
+          <div class="row"><span class="lab" id="styleLab">Driving style</span><span class="val" id="l100Out"></span></div>
+          <div class="seg" role="group" aria-labelledby="styleLab" data-key="style">
+            <button type="button" data-v="gentle">Gentle</button><button type="button" data-v="normal">Normal</button><button type="button" data-v="spirited">Spirited</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h3>The car today</h3>
+        <div class="field"><label for="km0">Odometer (km)</label><input type="number" id="km0" min="0" max="400000" step="1000" inputmode="numeric"></div>
+        <div class="field"><label for="value0">What it's worth now ($)</label><input type="number" id="value0" min="1000" max="60000" step="100" inputmode="numeric"></div>
+      </section>
+
+      <section class="group">
+        <h3>Running costs</h3>
+        <div class="field">
+          <label for="fuelPrice">Premium fuel ($/L)</label><input type="number" id="fuelPrice" min="0.8" max="4" step="0.01" inputmode="decimal">
+          <div class="hint">GTA premium was $2.139/L on Sept 28, 2026. The N20 wants 91 octane or higher.</div>
+        </div>
+        <div class="field">
+          <div class="row"><label for="fuelGrowth">Fuel price change per year</label><output id="fuelGrowthOut" for="fuelGrowth"></output></div>
+          <input type="range" id="fuelGrowth" min="-6" max="8" step="0.5">
+          <div class="hint">Pump prices are high right now; the 2026 national average for regular was $1.67/L.</div>
+        </div>
+        <div class="field">
+          <span class="lab" id="shopLab">Who services it</span>
+          <div class="seg" role="group" aria-labelledby="shopLab" data-key="shop">
+            <button type="button" data-v="indie">BMW indie</button><button type="button" data-v="dealer">Dealer</button><button type="button" data-v="diy">DIY</button>
+          </div>
+          <div class="hint">Dealer is about 1.5× an independent shop. DIY counts parts only.</div>
+        </div>
+        <div class="field">
+          <span class="lab" id="oilLab">Oil change every</span>
+          <div class="seg" role="group" aria-labelledby="oilLab" data-key="oilInterval">
+            <button type="button" data-v="8000">8,000 km</button><button type="button" data-v="12000">12,000 km</button><button type="button" data-v="16000">16,000 km</button>
+          </div>
+          <div class="hint">BMW's own interval is up to about 16,000 km or one year. Many N20 owners go shorter.</div>
+        </div>
+        <label class="check"><input type="checkbox" id="winterTires"><span>I run a separate winter tire set</span></label>
+        <div class="field">
+          <div class="row"><label for="inflation">Parts & labour inflation</label><output id="inflationOut" for="inflation"></output></div>
+          <input type="range" id="inflation" min="0" max="8" step="0.5">
+        </div>
+      </section>
+
+      <section class="group">
+        <h3>Insurance & money</h3>
+        <label class="check"><input type="checkbox" id="inclInsurance"><span>Include insurance in the total</span></label>
+        <div class="field">
+          <label for="insurance">Insurance per year ($)</label><input type="number" id="insurance" min="0" max="15000" step="50" inputmode="numeric">
+          <div class="hint">Newmarket averages about $2,275/yr for a 5-year-old Civic. A BMW coupe usually costs more. Use your own premium.</div>
+        </div>
+        <div class="field">
+          <div class="row"><label for="oppRate">Return you'd earn on the car's value</label><output id="oppRateOut" for="oppRate"></output></div>
+          <input type="range" id="oppRate" min="0" max="7" step="0.5">
+          <div class="hint">Optional. The interest you give up by keeping money in the car instead of, say, a GIC.</div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h3>Repair luck</h3>
+        <div class="seg" role="group" aria-label="Repair outlook" data-key="repairShift">
+          <button type="button" data-v="1.2">Lucky</button><button type="button" data-v="1">Typical</button><button type="button" data-v="0.85">Unlucky</button>
+        </div>
+        <div class="hint">Moves every repair's typical failure point 20% later or 15% earlier.</div>
+      </section>
+
+      <section class="group">
+        <details class="adv" id="advDetails">
+          <summary>Depreciation model</summary>
+          <div class="group" style="border:0;margin:0;padding:0">
+            <div class="field">
+              <div class="row"><label for="ageRate">Value lost to age, per year</label><output id="ageRateOut" for="ageRate"></output></div>
+              <input type="range" id="ageRate" min="1" max="12" step="0.5">
+              <div class="hint">Separate from kilometres. Derived from Kelley Blue Book's 3-year trend for this car.</div>
+            </div>
+            <div class="field">
+              <div class="row"><label for="mileRate">Value lost per 1,000 km</label><output id="mileRateOut" for="mileRate"></output></div>
+              <input type="range" id="mileRate" min="0.1" max="0.9" step="0.01">
+              <div class="hint">0.47% is the fit across 7 Canadian listings of this exact car (32k to 216k km).</div>
+            </div>
+            <div class="field">
+              <div class="row"><label for="marketDrift">Used-car market trend, per year</label><output id="marketDriftOut" for="marketDrift"></output></div>
+              <input type="range" id="marketDrift" min="-6" max="6" step="0.5">
+            </div>
+            <label class="check"><input type="checkbox" id="thresholds"><span>Extra drop at 100k, 150k and 200k km (buyers filter by these)</span></label>
+            <div class="field"><label for="floor">Value floor ($)</label><input type="number" id="floor" min="0" max="10000" step="250" inputmode="numeric"><div class="hint">A running AWD BMW rarely sells for less than this.</div></div>
+          </div>
+        </details>
+      </section>
+      <div style="padding-bottom:12px"><button type="button" class="btn" id="resetBtn">Reset to researched defaults</button></div>
+    </aside>
+
+    <main class="results">
+      <p class="verdict" id="verdict"></p>
+      <div class="tiles" id="tiles"></div>
+
+      <section class="panel" aria-labelledby="h-value">
+        <div class="panel-head"><h2 id="h-value">What it's worth over time</h2></div>
+        <p class="lede">Your plan in blue. Grey lines show the same car driven 5,000 to 30,000 km a year, so you can see how much the kilometres matter against the calendar.</p>
+        <div class="chart" id="chartValue"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-heat">
+        <div class="panel-head"><h2 id="h-heat">Value by distance and time</h2></div>
+        <p class="lede">Each cell is the car's market value after that many years at that yearly distance. Tap a cell to load it into the planner.</p>
+        <div class="hm-wrap"><div class="hm" id="heat"></div></div>
+        <div class="scale" id="heatScale"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-cost">
+        <div class="panel-head"><h2 id="h-cost">Where the money goes, year by year</h2></div>
+        <p class="lede">Repairs are expected values: a 40% chance of a $1,600 job counts as $640. Real years are lumpier.</p>
+        <div class="legend" id="costLegend"></div>
+        <div class="chart" id="chartCost"></div>
+      </section>
+
+      <div class="two">
+        <section class="panel" aria-labelledby="h-perkm">
+          <div class="panel-head"><h2 id="h-perkm">Cost per kilometre</h2></div>
+          <p class="lede">Everything included, divided by the distance driven that year.</p>
+          <div class="chart" id="chartPerKm"></div>
+          <p class="insight" id="perKmInsight"></p>
+        </section>
+        <section class="panel" aria-labelledby="h-split">
+          <div class="panel-head"><h2 id="h-split">Totals over your plan</h2></div>
+          <p class="lede">Cash out of pocket versus value lost.</p>
+          <div class="tbl-wrap"><table id="splitTbl"></table></div>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="h-rep">
+        <div class="panel-head"><h2 id="h-rep">Repair risk while you own it</h2></div>
+        <p class="lede">Chance each known N20, F22 and xDrive problem shows up during your plan, based on the car's kilometres and age. Tick anything that has already been replaced.</p>
+        <div class="recall"><b>Recall check:</b> your car falls in BMW's water-pump connector recall (Transport Canada 2024-468, NHTSA 24V-608) for the 2014–2016 228i and 228i xDrive. Dealers inspect and replace the pump and plug if needed at no charge. If yours got a new pump, tick "Already replaced" on the water pump row.</div>
+        <div class="rep" id="repList"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-svc">
+        <div class="panel-head"><h2 id="h-svc">Service log ahead</h2></div>
+        <p class="lede">Scheduled maintenance and wear items, dated from your yearly distance. The model assumes a 10-year-old car is due for its first coolant, transmission and xDrive fluid changes. Tick anything done in the last year.</p>
+        <div class="donegrid" id="svcDone"></div>
+        <div class="svc-list" id="svcList"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-tbl">
+        <div class="panel-head"><h2 id="h-tbl">Year by year</h2></div>
+        <div class="tbl-wrap"><table id="yearTbl"></table></div>
+      </section>
+
+      <section class="panel notes" aria-labelledby="h-notes">
+        <h2 id="h-notes">How the numbers are built</h2>
+        <h3>Value</h3>
+        <ul>
+          <li>Value = today's value × age factor × kilometre factor. The kilometre factor comes from a fit across seven 2016 228i xDrive coupes listed in Canada in September 2026, from 32,265 km ($23,995) to 215,612 km ($9,995). Price falls about 0.47% per 1,000 km, and the fit puts a 56,000 km car near $22,000 at a dealer. Your $18,500 is about 84% of that, in line with a private sale.</li>
+          <li>The 5% per year for age alone comes from Kelley Blue Book's 32% three-year drop for this model, minus the part explained by typical US kilometres.</li>
+        </ul>
+        <h3>Fuel</h3>
+        <ul>
+          <li>NRCan rated the 2016 228i xDrive at 10.4 L/100 km city and 6.8 highway; the EPA's tougher cycle gives 10.2 and 6.9. The model uses real-world 11.2 city and 7.3 highway, adds 4% for Ontario winters, then applies your driving style.</li>
+          <li>Premium at $2.139/L is the GTA posted price on Sept 28, 2026, after a 7-cent drop. Prices are elevated compared with earlier in 2026.</li>
+        </ul>
+        <h3>Maintenance and repairs</h3>
+        <ul>
+          <li>Costs are Ontario independent-shop prices in CAD including 13% HST, built from US parts and labour quotes converted at 1.41 and cross-checked against Canadian listings. Examples: N20 timing chain service runs US$1,890–2,890 at a specialist; a BMW OEM water pump is about US$450 before labour.</li>
+          <li>Each repair's chance rises along a curve of kilometres plus a per-year aging allowance for rubber and plastic parts. Each is counted once during your plan. Small unlisted fixes (sensors, bulbs, a window regulator) add about $320 a year, rising 7% a year and with distance.</li>
+          <li>RepairPal puts the 228i xDrive's average upkeep at US$920 a year across all ages; CarEdge puts the 2 Series at about US$13,780 over its first 10 years with a 42% chance of a major repair. Years 11 onward cost more, which is where your car is now.</li>
+        </ul>
+        <h3>What it leaves out</h3>
+        <ul>
+          <li>Collisions, deductibles, parking, washes and financing. Ontario no longer charges licence plate sticker fees. Selling costs (safety certificate, used vehicle package) are under $200.</li>
+          <li>Car values and repair odds are estimates, not quotes. Treat the heatmap as a range of about ±10%.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul class="foot">
+          <li><a href="https://www.cargurus.ca/Cars/l-Used-2016-BMW-2-Series-228i-xDrive-Coupe-AWD-t58798" target="_blank" rel="noopener">CarGurus.ca: 2016 228i xDrive coupe listings</a> · <a href="https://www.kbb.com/bmw/2-series/2016/228i-xdrive-coupe-2d/" target="_blank" rel="noopener">Kelley Blue Book: 2016 228i xDrive values</a></li>
+          <li><a href="https://www.autotrader.ca/research/bmw/2%20series/2016/" target="_blank" rel="noopener">AutoTrader.ca: 2016 2 Series fuel ratings</a> · <a href="https://fueleconomy.gov/feg/Find.do?action=sbs&amp;id=36639" target="_blank" rel="noopener">fueleconomy.gov: 2016 228i xDrive</a></li>
+          <li><a href="https://www.insauga.com/gas-prices-see-big-drop-in-toronto-and-southern-ontario/" target="_blank" rel="noopener">insauga: GTA gas prices, Sept 28, 2026</a> · <a href="https://www.finder.com/ca/research/canadian-gas-prices" target="_blank" rel="noopener">Finder: Canadian gas price averages</a></li>
+          <li><a href="https://rates.ca/insurance-quotes/auto/newmarket" target="_blank" rel="noopener">Rates.ca: Newmarket insurance average</a></li>
+          <li><a href="https://repairpal.com/bmw/228i-xdrive" target="_blank" rel="noopener">RepairPal: 228i xDrive costs</a> · <a href="https://proxy.caredge.com/bmw/2-series/maintenance" target="_blank" rel="noopener">CarEdge: 2 Series maintenance</a> · <a href="https://repairpal.com/estimator/bmw/228i/water-pump-replacement-cost" target="_blank" rel="noopener">RepairPal: 228i water pump</a></li>
+          <li><a href="https://bmwtuning.co/bmw-n20-engine-common-problems/" target="_blank" rel="noopener">BMW Tuning: N20 common problems</a> · <a href="https://www.perrysqualityauto.com/blog/bmw-n20-timing-chain-symptoms-cost/" target="_blank" rel="noopener">Perry's: N20 timing chain cost</a> · <a href="https://www.go-parts.com/garage/transfer-case-assembly-bmw-228i-bmw-435i-bmw-328i-gt-xdrive-2007-2021" target="_blank" rel="noopener">Go-Parts: xDrive transfer case</a></li>
+          <li><a href="https://recalls-rappels.canada.ca/en/alert-recall/transport-canada-recall-2024468-bmw" target="_blank" rel="noopener">Transport Canada recall 2024-468</a> · <a href="https://www.bimmerworld.com/Cooling/Water-Pumps/OE-BMW-Water-Pump-N20-N26-F22-F30-F32-F10-X1-F25-F26-E89-11518635089.html" target="_blank" rel="noopener">BimmerWorld: N20 water pump</a></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+// ---- Ownership model: 2016 BMW 228i xDrive (F22, N20 2.0T, ZF 8HP, xDrive) ----
+// All money in CAD, tax-in (13% HST) at an independent BMW shop unless noted.
+const MODEL_START = { y: 2026, m: 8 };        // Sept 2026 (month index 8)
+const CAR_AGE_NOW = 10.6;                     // years since ~early-2016 in-service date
+
+const SHOP_MULT = { indie: 1.0, dealer: 1.5, diy: 0.5 };
+
+// Scheduled maintenance. firstKm is absolute odometer; firstYr is years from now.
+// Whichever comes first triggers; then repeats every kmInt or yrInt, whichever first.
+const SERVICES = [
+  { id: 'oil',   name: 'Oil & filter service (LL-01 5W-30)', cat: 'maint', cost: 170, kmInt: null, yrInt: 1, firstYr: 0.5, firstKmOffset: 0.5 },
+  { id: 'filt',  name: 'Engine air + cabin microfilter', cat: 'maint', cost: 190, kmInt: 32000, yrInt: 2, firstYr: 1 },
+  { id: 'bfl',   name: 'Brake fluid flush', cat: 'maint', cost: 160, kmInt: null, yrInt: 2, firstYr: 1 },
+  { id: 'plug',  name: 'Spark plugs', cat: 'maint', cost: 390, kmInt: 90000, yrInt: 6, firstYr: 0.75 },
+  { id: 'cool',  name: 'Coolant flush', cat: 'maint', cost: 260, kmInt: null, yrInt: 5, firstYr: 1 },
+  { id: 'trans', name: 'ZF 8HP transmission fluid + pan/filter', cat: 'maint', cost: 790, kmInt: 100000, yrInt: 10, firstYr: 1.5, firstKm: 100000 },
+  { id: 'xdr',   name: 'Transfer case + differential fluids', cat: 'maint', cost: 420, kmInt: 80000, yrInt: 8, firstYr: 1, firstKm: 80000 },
+  { id: 'batt',  name: 'AGM battery + registration', cat: 'maint', cost: 520, kmInt: null, yrInt: 7, firstYr: 1.5 },
+  { id: 'align', name: 'Wheel alignment', cat: 'maint', cost: 160, kmInt: null, yrInt: 2, firstYr: 1 },
+  { id: 'brkF',  name: 'Front pads, rotors, wear sensor', cat: 'wear', cost: 980, kmInt: 55000, yrInt: null, firstKmOffset: 14000 },
+  { id: 'brkR',  name: 'Rear pads, rotors, wear sensor', cat: 'wear', cost: 860, kmInt: 70000, yrInt: null, firstKmOffset: 29000 },
+  { id: 'tireS', name: 'Summer/all-season run-flats (225/40R18 + 245/35R18)', cat: 'wear', cost: 1650, kmInt: null, yrInt: 6, firstYr: 3, tire: 'summer', noShop: true, firstKmOffset: 40000 },
+  { id: 'tireW', name: 'Winter tires (set of 4, on existing rims)', cat: 'wear', cost: 1150, kmInt: null, yrInt: 6, firstYr: 2, tire: 'winter', noShop: true },
+];
+const TIRE_LIFE = { summer: 45000, winter: 40000 }; // km driven ON that set
+const WINTER_SHARE = 0.35;                           // share of annual km on winters (Nov–Apr)
+
+// Unscheduled repairs, as expected values. Wear score = km + ageW (km-equivalent per year of age) * age.
+// Probability follows a logistic curve on that score (median, scale), conditional on
+// the part not having failed yet.
+const REPAIRS = [
+  { id: 'vcg',   name: 'Valve cover + gasket (oil leak)', cost: 1050, ageW: 6500, med: 155000, sc: 32000, note: 'The most common N20 oil leak. The gasket hardens with heat cycles and age.' },
+  { id: 'ofhg',  name: 'Oil filter housing gasket', cost: 750, ageW: 6500, med: 165000, sc: 32000, note: 'Leaks can reach the drive belt if ignored.' },
+  { id: 'wp',    name: 'Electric water pump + thermostat', cost: 1600, ageW: 4000, med: 150000, sc: 30000, note: 'N20 pumps often fail between 90k and 150k km, usually without warning.' },
+  { id: 'hose',  name: 'Coolant hoses, expansion tank, charge pipe', cost: 700, ageW: 6500, med: 180000, sc: 35000, note: 'Plastic cooling and intake parts turn brittle with age.' },
+  { id: 'arms',  name: 'Front control arms / thrust-arm bushings', cost: 1100, ageW: 5000, med: 180000, sc: 40000, note: 'Clunks over bumps, vague steering. Potholes speed it up.' },
+  { id: 'oilpan',name: 'Oil pan gasket', cost: 900, ageW: 5000, med: 200000, sc: 38000, note: 'Labour-heavy on xDrive cars because the front diff is in the way.' },
+  { id: 'coils', name: 'Ignition coils', cost: 600, ageW: 3000, med: 185000, sc: 40000, note: 'Shows up as misfire codes. Often done together with plugs.' },
+  { id: 'shocks',name: 'Shocks and struts (4)', cost: 2000, ageW: 4000, med: 195000, sc: 40000, note: 'Ride and damping fade gradually.' },
+  { id: 'tca',   name: 'xDrive transfer case actuator motor', cost: 1650, ageW: 4000, med: 210000, sc: 45000, note: 'The most common xDrive fault. Fresh transfer case fluid helps.' },
+  { id: 'mounts',name: 'Engine + transmission mounts', cost: 900, ageW: 5000, med: 215000, sc: 40000, note: 'Vibration at idle and clunks on shifts.' },
+  { id: 'ac',    name: 'A/C compressor or condenser', cost: 1800, ageW: 6000, med: 250000, sc: 50000, note: 'Mostly age-driven.' },
+  { id: 'hpfp',  name: 'High-pressure fuel pump', cost: 1400, ageW: 3000, med: 260000, sc: 55000, note: 'Hard starts and long cranking.' },
+  { id: 'turbo', name: 'Turbo (wastegate rattle or failure)', cost: 2900, ageW: 3000, med: 290000, sc: 60000, note: 'Uncommon on N20s with regular oil changes.' },
+  { id: 'chain', name: 'Timing chain + guides', cost: 3600, ageW: 2000, med: 330000, sc: 65000, note: 'Mainly a pre-2015 N20 problem. Your 2016 has the revised chain.' },
+  { id: 'tcase', name: 'Transfer case replacement', cost: 4500, ageW: 3000, med: 340000, sc: 65000, note: 'Rare. Usually follows neglected fluid.' },
+];
+const MISC_BASE = 320; // small unlisted repairs per year at age ~10.6 (sensors, bulbs, window regulator...)
+
+const logistic = (x, med, sc) => 1 / (1 + Math.exp(-(x - med) / sc));
+
+function fuelLper100(p) {
+  // Real-world bases (EPA 5-cycle: 10.2 city / 6.9 hwy), plus ~4% annual winter penalty in Ontario.
+  const styleMult = { gentle: 0.93, normal: 1.0, spirited: 1.15 }[p.style] || 1;
+  return (p.cityShare * 11.2 + (1 - p.cityShare) * 7.3) * styleMult * 1.04;
+}
+
+function thresholdFactor(km, on) {
+  if (!on) return 1;
+  let f = 1;
+  if (km >= 100000) f *= 0.97;
+  if (km >= 150000) f *= 0.98;
+  if (km >= 200000) f *= 0.98;
+  return f;
+}
+
+// Market value at t years from now with odometer km.
+function valueAt(p, t, km) {
+  const a = -Math.log(1 - p.ageRate);
+  const m = -Math.log(1 - p.mileRate);
+  const raw = p.value0 * Math.exp(-a * t) * Math.exp(-m * (km - p.km0) / 1000)
+    * Math.pow(1 + p.marketDrift, t)
+    * thresholdFactor(km, p.thresholds) / thresholdFactor(p.km0, p.thresholds);
+  return Math.max(p.floor, raw);
+}
+
+function simulate(p) {
+  const months = Math.round(p.years * 12);
+  const kmM = p.kmPerYear / 12;
+  const L100 = fuelLper100(p);
+  const mult = SHOP_MULT[p.shop] || 1;
+  const done = p.done || {};
+
+  // Service schedule state
+  const svc = SERVICES.filter(s => !(s.tire === 'winter' && !p.winterTires)).map(s => {
+    let kmInt = s.kmInt;
+    if (s.id === 'oil') kmInt = p.oilInterval;
+    if (s.tire === 'summer') kmInt = TIRE_LIFE.summer / (p.winterTires ? (1 - WINTER_SHARE) : 1);
+    if (s.tire === 'winter') kmInt = TIRE_LIFE.winter / WINTER_SHARE;
+    let nextKm = Infinity, nextYr = Infinity;
+    if (done[s.id]) {                       // done recently: full interval from today
+      nextKm = kmInt ? p.km0 + kmInt : Infinity;
+      nextYr = s.yrInt || Infinity;
+    } else {
+      if (s.firstKm != null) nextKm = Math.max(s.firstKm, p.km0 + 10000);
+      else if (s.firstKmOffset != null) nextKm = p.km0 + (s.firstKmOffset < 1 ? kmInt * s.firstKmOffset : s.firstKmOffset);
+      else if (kmInt) nextKm = p.km0 + kmInt;
+      if (s.firstYr != null) nextYr = s.firstYr;
+    }
+    return { ...s, kmInt, nextKm, nextYr };
+  });
+
+  // Repair state: base score at start and conditional denominator
+  const rep = REPAIRS.map(r => {
+    const isNew = !!done[r.id] || (r.id === 'wp' && p.pumpRecall);
+    const score = (t, km) => isNew ? (km - p.km0) + r.ageW * t
+                                   : km + r.ageW * (CAR_AGE_NOW + t);
+    const med = r.med * (p.repairShift || 1);
+    const F0 = logistic(score(0, p.km0), med, r.sc);
+    return { ...r, med, isNew, score, F0, surv0: 1 - F0, expCost: 0, prob: 0 };
+  });
+
+  const events = [];
+  const yearly = [];
+  let cur = null;
+  let km = p.km0;
+  for (let i = 0; i < months; i++) {
+    const t0 = i / 12, t1 = (i + 1) / 12;
+    const km1 = km + kmM;
+    const yIdx = Math.floor(i / 12);
+    if (!cur || cur.year !== yIdx + 1) {
+      cur = { year: yIdx + 1, startKm: km, startValue: valueAt(p, t0, km), fuel: 0, maint: 0, wear: 0, repairs: 0, insurance: 0, capital: 0, fuelL: 0 };
+      yearly.push(cur);
+    }
+    // Fuel
+    const litres = kmM * L100 / 100;
+    const price = p.fuelPrice * Math.pow(1 + p.fuelGrowth, t0 + 1 / 24);
+    cur.fuel += litres * price;
+    cur.fuelL += litres;
+    // Insurance and capital cost
+    if (p.inclInsurance) cur.insurance += p.insurance * Math.pow(1 + p.insGrowth, t0) / 12;
+    if (p.oppRate > 0) cur.capital += valueAt(p, t0, km) * p.oppRate / 12;
+    // Scheduled services
+    for (const s of svc) {
+      let guard = 0;
+      while ((km1 >= s.nextKm || t1 >= s.nextYr) && guard++ < 5) {
+        const c = s.cost * (s.noShop ? 1 : mult) * Math.pow(1 + p.inflation, t0);
+        cur[s.cat] += c;
+        const atKm = km1 >= s.nextKm ? Math.max(km, s.nextKm) : km1;
+        events.push({ t: t1, km: Math.round(atKm), name: s.name, cost: c, cat: s.cat });
+        s.nextKm = s.kmInt ? km1 + s.kmInt : Infinity;
+        s.nextYr = s.yrInt ? t1 + s.yrInt : Infinity;
+      }
+    }
+    if (p.winterTires) cur.maint += 120 / 12 * Math.pow(1 + p.inflation, t0); // seasonal changeover
+    cur.maint += 70 / 12;                                                    // wipers, washer fluid, top-ups
+    // Expected repairs
+    for (const r of rep) {
+      const Fa = logistic(r.score(t0, km), r.med, r.sc);
+      const Fb = logistic(r.score(t1, km1), r.med, r.sc);
+      const dp = Math.max(0, Fb - Fa) / r.surv0;
+      const c = r.cost * mult * Math.pow(1 + p.inflation, t0) * dp;
+      cur.repairs += c;
+      r.expCost += c;
+      r.prob += dp;
+    }
+    const ageFactor = Math.pow(1.07, t0);
+    const useFactor = 0.5 + 0.5 * p.kmPerYear / 15000;
+    cur.repairs += MISC_BASE * ageFactor * useFactor * mult / 12;
+    km = km1;
+    if (i % 12 === 11 || i === months - 1) {
+      cur.endKm = km;
+      cur.endValue = valueAt(p, t1, km);
+      cur.dep = cur.startValue - cur.endValue;
+      cur.months = (i % 12) + 1;
+    }
+  }
+  for (const y of yearly) {
+    y.running = y.fuel + y.maint + y.wear + y.repairs;
+    y.total = y.dep + y.running + y.insurance + y.capital;
+    y.km = y.endKm - y.startKm;
+    y.perKm = y.km > 0 ? y.total / y.km : 0;
+  }
+  const sum = k => yearly.reduce((a, y) => a + y[k], 0);
+  const totals = {
+    dep: sum('dep'), fuel: sum('fuel'), maint: sum('maint'), wear: sum('wear'), repairs: sum('repairs'),
+    insurance: sum('insurance'), capital: sum('capital'), fuelL: sum('fuelL'),
+  };
+  totals.total = totals.dep + totals.fuel + totals.maint + totals.wear + totals.repairs + totals.insurance + totals.capital;
+  totals.cash = totals.total - totals.dep - totals.capital;
+  const endKm = p.km0 + p.kmPerYear * p.years;
+  const endValue = valueAt(p, p.years, endKm);
+  const kmDriven = endKm - p.km0;
+  return {
+    yearly, totals, events, repairs: rep.map(r => ({ id: r.id, name: r.name, cost: r.cost * mult, prob: Math.min(1, r.prob), exp: r.expCost, isNew: r.isNew, note: r.note })),
+    endKm, endValue, kmDriven, L100,
+    perKm: kmDriven > 0 ? totals.total / kmDriven : 0,
+    perMonth: totals.total / (p.years * 12),
+  };
+}
+
+const DEFAULTS = {
+  value0: 18500, km0: 56000, kmPerYear: 15000, years: 5,
+  cityShare: 0.5, style: 'normal',
+  fuelPrice: 2.139, fuelGrowth: 0.0,
+  insurance: 2400, inclInsurance: true, insGrowth: 0.03,
+  shop: 'indie', oilInterval: 12000, winterTires: true,
+  inflation: 0.025, oppRate: 0.0,
+  ageRate: 0.05, mileRate: 0.0047, marketDrift: 0.0, thresholds: false, floor: 3000,
+  repairShift: 1, pumpRecall: false, done: {},
+};
+
+
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const fmt$ = n => (n < 0 ? '−$' : '$') + Math.round(Math.abs(n)).toLocaleString('en-CA');
+const fmtK = n => '$' + (Math.abs(n) >= 10000 ? (n / 1000).toFixed(1) : (n / 1000).toFixed(1)) + 'k';
+const fmtKm = n => Math.round(n).toLocaleString('en-CA') + ' km';
+const odoStr = n => String(Math.round(n)).padStart(6, '0').replace(/(\d{3})(\d{3})$/, '$1 $2') + ' km';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dateAt = t => { const m = MODEL_START.m + Math.round(t * 12); return new Date(MODEL_START.y + Math.floor(m / 12), m % 12, 1); };
+const fmtDate = t => { const d = dateAt(t); return MONTHS[d.getMonth()] + ' ' + d.getFullYear(); };
+const cssv = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const NS = 'http://www.w3.org/2000/svg';
+function niceTicks(max, count) {
+  const raw = max / count, pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * pow).find(s => s >= raw) || raw;
+  const out = []; for (let v = 0; ; v += step) { out.push(v); if (v >= max - 1e-9) break; } return { ticks: out, step };
+}
+
+const CATS = [
+  { k: 'dep', name: 'Depreciation', v: '--c-dep' },
+  { k: 'fuel', name: 'Fuel', v: '--c-fuel' },
+  { k: 'maint', name: 'Scheduled service', v: '--c-maint' },
+  { k: 'wear', name: 'Brakes & tires', v: '--c-wear' },
+  { k: 'repairs', name: 'Repairs (expected)', v: '--c-rep' },
+  { k: 'insurance', name: 'Insurance', v: '--c-ins' },
+  { k: 'capital', name: 'Money tied up', v: '--c-cap' },
+];
+
+// ---------- state ----------
+const STORE_KEY = 'bmw228-planner-v1';
+let S = JSON.parse(JSON.stringify(DEFAULTS));
+try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (saved && typeof saved === 'object') S = Object.assign(S, saved, { done: Object.assign({}, saved.done || {}) }); } catch (e) {}
+const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} };
+
+// Inputs <-> state. pct: slider shows percent, state stores fraction.
+const BIND = [
+  { id: 'kmPerYear', type: 'range', out: v => v.toLocaleString('en-CA') + ' km' },
+  { id: 'years', type: 'range', out: v => v + (v === 1 ? ' year' : ' years') },
+  { id: 'cityShare', type: 'range', pct: true, out: v => Math.round(v * 100) + '% city' },
+  { id: 'fuelGrowth', type: 'range', pct: true, out: v => (v > 0 ? '+' : '') + (v * 100).toFixed(1) + '%' },
+  { id: 'inflation', type: 'range', pct: true, out: v => (v * 100).toFixed(1) + '%' },
+  { id: 'oppRate', type: 'range', pct: true, out: v => v === 0 ? 'Off' : (v * 100).toFixed(1) + '%' },
+  { id: 'ageRate', type: 'range', pct: true, out: v => (v * 100).toFixed(1) + '%' },
+  { id: 'mileRate', type: 'range', pct: true, out: v => (v * 100).toFixed(2) + '%' },
+  { id: 'marketDrift', type: 'range', pct: true, out: v => (v > 0 ? '+' : '') + (v * 100).toFixed(1) + '%' },
+  { id: 'km0', type: 'number' }, { id: 'value0', type: 'number' }, { id: 'fuelPrice', type: 'number' },
+  { id: 'insurance', type: 'number' }, { id: 'floor', type: 'number' },
+  { id: 'winterTires', type: 'check' }, { id: 'inclInsurance', type: 'check' }, { id: 'thresholds', type: 'check' },
+];
+function syncInputs() {
+  for (const b of BIND) {
+    const el = $(b.id);
+    if (b.type === 'check') el.checked = !!S[b.id];
+    else el.value = b.pct ? +(S[b.id] * 100).toFixed(2) : S[b.id];
+    if (b.out) $(b.id + 'Out').textContent = b.out(S[b.id]);
+  }
+  document.querySelectorAll('.seg[data-key]').forEach(seg => {
+    const key = seg.dataset.key;
+    seg.querySelectorAll('button').forEach(btn => btn.setAttribute('aria-pressed', String(+btn.dataset.v === +S[key] || btn.dataset.v === S[key])));
+  });
+}
+for (const b of BIND) {
+  const el = $(b.id);
+  const handler = () => {
+    if (b.type === 'check') S[b.id] = el.checked;
+    else {
+      let v = parseFloat(el.value);
+      if (!isFinite(v)) return;
+      if (b.pct) v = v / 100;
+      if (b.type === 'number') { const mn = parseFloat(el.min), mx = parseFloat(el.max); if (isFinite(mn)) v = Math.max(mn, v); if (isFinite(mx)) v = Math.min(mx, v); }
+      S[b.id] = v;
+    }
+    if (b.out) $(b.id + 'Out').textContent = b.out(S[b.id]);
+    schedule();
+  };
+  el.addEventListener(b.type === 'check' ? 'change' : 'input', handler);
+}
+document.querySelectorAll('.seg[data-key]').forEach(seg => {
+  seg.addEventListener('click', e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    const key = seg.dataset.key; const v = btn.dataset.v;
+    S[key] = isNaN(+v) ? v : +v;
+    syncInputs(); schedule();
+  });
+});
+$('resetBtn').addEventListener('click', () => { S = JSON.parse(JSON.stringify(DEFAULTS)); syncInputs(); schedule(); });
+
+let raf = 0;
+function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { render(); save(); }); }
+
+// ---------- tooltip ----------
+function tipFor(container) {
+  let tip = container.querySelector('.tip');
+  if (!tip) { tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; container.appendChild(tip); }
+  return {
+    show(html, x, y) {
+      tip.innerHTML = html; tip.hidden = false;
+      const cw = container.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+      let left = x + 14; if (left + tw > cw) left = x - tw - 14; if (left < 0) left = Math.max(0, Math.min(cw - tw, x - tw / 2));
+      let top = y - th - 12; if (top < 0) top = y + 16;
+      tip.style.left = left + 'px'; tip.style.top = top + 'px';
+    },
+    hide() { tip.hidden = true; }
+  };
+}
+function el(tag, attrs, parent) {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n); return n;
+}
+
+// ---------- value chart ----------
+function drawValue(res) {
+  const box = $('chartValue');
+  const W = Math.max(300, box.clientWidth), narrow = W < 560;
+  const H = narrow ? 260 : 320;
+  const m = { l: 52, r: narrow ? 70 : 96, t: 22, b: 36 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const T = Math.max(S.years, 2);
+  const x = t => m.l + t / T * iw;
+  const yMax = Math.max(S.value0, res.endValue) * 1.06;
+  const { ticks } = niceTicks(yMax, narrow ? 4 : 5);
+  const top = ticks[ticks.length - 1];
+  const y = v => m.t + ih - v / top * ih;
+  box.querySelectorAll('svg').forEach(n => n.remove());
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Market value over time for your plan and reference distances' });
+  box.prepend(svg);
+  const ink2 = cssv('--ink-2'), muted = cssv('--muted'), rule = cssv('--rule'), ruleS = cssv('--rule-strong'), refc = cssv('--line-ref'), blue = cssv('--c-dep'), surf = cssv('--surface');
+  // grid
+  for (const tv of ticks) {
+    el('line', { x1: m.l, x2: m.l + iw, y1: y(tv), y2: y(tv), stroke: tv === 0 ? ruleS : rule, 'stroke-width': 1 }, svg);
+    const t = el('text', { x: m.l - 8, y: y(tv) + 4, 'text-anchor': 'end', 'font-size': 11.5, fill: muted }, svg); t.textContent = tv === 0 ? '$0' : '$' + (tv / 1000) + 'k';
+  }
+  const xStep = T <= 3 ? 0.5 : T <= 8 ? 1 : 2;
+  for (let t = 0; t <= T + 1e-9; t += xStep) {
+    el('line', { x1: x(t), x2: x(t), y1: m.t + ih, y2: m.t + ih + 4, stroke: ruleS }, svg);
+    const tx = el('text', { x: x(t), y: m.t + ih + 18, 'text-anchor': 'middle', 'font-size': 11.5, fill: muted }, svg);
+    tx.textContent = t === 0 ? 'Now' : (Number.isInteger(t) ? dateAt(t).getFullYear() : fmtDate(t));
+  }
+  // reference lines
+  const refs = [5000, 10000, 20000, 30000].filter(k => Math.abs(k - S.kmPerYear) > 2500);
+  const N = Math.max(24, Math.round(T * 12));
+  const pathFor = kmy => { let d = ''; for (let i = 0; i <= N; i++) { const t = i / N * T; d += (i ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(valueAt(S, t, S.km0 + kmy * t)).toFixed(1); } return d; };
+  const labels = [];
+  for (const k of refs) {
+    el('path', { d: pathFor(k), fill: 'none', stroke: refc, 'stroke-width': 1.5 }, svg);
+    labels.push({ y: y(valueAt(S, T, S.km0 + k * T)), text: (k / 1000) + 'k km/yr', color: muted, w: 400 });
+  }
+  // your plan: area + line
+  let d = pathFor(S.kmPerYear);
+  const area = d + `L${x(T)},${y(0)}L${x(0)},${y(0)}Z`;
+  el('path', { d: area, fill: blue, 'fill-opacity': 0.09 }, svg);
+  el('path', { d, fill: 'none', stroke: blue, 'stroke-width': 2.75, 'stroke-linejoin': 'round' }, svg);
+  el('circle', { cx: x(0), cy: y(S.value0), r: 4.5, fill: blue, stroke: surf, 'stroke-width': 2 }, svg);
+  el('circle', { cx: x(T), cy: y(valueAt(S, T, S.km0 + S.kmPerYear * T)), r: 5, fill: blue, stroke: surf, 'stroke-width': 2 }, svg);
+  labels.push({ y: y(valueAt(S, T, S.km0 + S.kmPerYear * T)), text: fmt$(valueAt(S, T, S.km0 + S.kmPerYear * T)), color: cssv('--ink'), w: 700, main: true });
+  // milestones on your line
+  if (S.kmPerYear > 0) for (const ms of [100000, 150000, 200000, 250000]) {
+    const t = (ms - S.km0) / S.kmPerYear;
+    if (t <= 0.05 || t >= T - 0.05) continue;
+    const cx = x(t), cy = y(valueAt(S, t, ms));
+    el('line', { x1: cx, x2: cx, y1: cy - 6, y2: cy - 22, stroke: ruleS }, svg);
+    el('circle', { cx, cy, r: 3.5, fill: surf, stroke: blue, 'stroke-width': 2 }, svg);
+    const tx = el('text', { x: cx, y: cy - 27, 'text-anchor': 'middle', 'font-size': 11, fill: ink2, 'font-weight': 600 }, svg); tx.textContent = (ms / 1000) + 'k km · ' + fmtDate(t);
+  }
+  // end labels with collision avoidance
+  labels.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 14) labels[i].y = labels[i - 1].y + 14;
+  for (const L of labels) { const t = el('text', { x: m.l + iw + 8, y: L.y + 4, 'font-size': L.main ? 13 : 11.5, fill: L.color, 'font-weight': L.w }, svg); t.textContent = L.text; }
+  // hover layer
+  const tip = tipFor(box);
+  const cross = el('line', { y1: m.t, y2: m.t + ih, stroke: ruleS, 'stroke-width': 1, visibility: 'hidden' }, svg);
+  const dot = el('circle', { r: 5, fill: blue, stroke: surf, 'stroke-width': 2, visibility: 'hidden' }, svg);
+  const hit = el('rect', { x: m.l, y: m.t, width: iw, height: ih, fill: 'transparent', tabindex: 0, 'aria-label': 'Hover or use arrow keys to read values' }, svg);
+  let kIdx = 0;
+  const showAt = (t, px) => {
+    t = Math.max(0, Math.min(T, Math.round(t * 12) / 12));
+    const km = S.km0 + S.kmPerYear * t, v = valueAt(S, t, km);
+    cross.setAttribute('x1', x(t)); cross.setAttribute('x2', x(t)); cross.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', x(t)); dot.setAttribute('cy', y(v)); dot.setAttribute('visibility', 'visible');
+    const scale = box.clientWidth / W;
+    tip.show(`<div class="t">${fmtDate(t)}</div><div class="r"><span>Odometer</span><span>${fmtKm(km)}</span></div><div class="r"><span>Worth</span><span>${fmt$(v)}</span></div><div class="r"><span>Lost so far</span><span>${fmt$(S.value0 - v)}</span></div>`, x(t) * scale, y(v) * scale);
+  };
+  const hide = () => { cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); tip.hide(); };
+  hit.addEventListener('pointermove', e => { const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) * W / r.width; showAt((px - m.l) / iw * T); });
+  hit.addEventListener('pointerleave', hide);
+  hit.addEventListener('blur', hide);
+  hit.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); kIdx = Math.max(0, Math.min(Math.round(T * 12), kIdx + (e.key === 'ArrowRight' ? 1 : -1))); showAt(kIdx / 12); } });
+}
+
+// ---------- heatmap ----------
+function lerpColor(stops, f) {
+  f = Math.max(0, Math.min(1, f));
+  const seg = f * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(seg)), u = seg - i;
+  const a = stops[i].match(/\w\w/g).map(h => parseInt(h, 16)), b = stops[i + 1].match(/\w\w/g).map(h => parseInt(h, 16));
+  const c = a.map((v, k) => Math.round(v + (b[k] - v) * u));
+  return { css: `rgb(${c.join(',')})`, lum: (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 };
+}
+function isDark() { return getComputedStyle(document.documentElement).colorScheme === 'dark'; }
+function drawHeat() {
+  const cols = [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000];
+  const maxY = Math.max(10, S.years);
+  const rows = Array.from({ length: maxY }, (_, i) => i + 1);
+  const stops = isDark() ? ['1b2a3d', '1c4a82', '2a78d6', '6da7ec', 'b7d3f6'] : ['e6f0fc', 'b7d3f6', '6da7ec', '2a78d6', '104281'];
+  const vals = rows.map(r => cols.map(c => valueAt(S, r, S.km0 + c * r)));
+  const flat = vals.flat(); const lo = Math.min(...flat), hi = Math.max(...flat);
+  const g = $('heat');
+  g.style.gridTemplateColumns = `96px repeat(${cols.length}, minmax(48px, 1fr))`;
+  let html = '<div class="h" style="text-align:right;padding-right:8px">km/yr →</div>' + cols.map(c => `<div class="h">${c / 1000}k</div>`).join('');
+  rows.forEach((r, ri) => {
+    html += `<div class="rh">${r} yr · ${dateAt(r).getFullYear()}</div>`;
+    cols.forEach((c, ci) => {
+      const v = vals[ri][ci]; const col = lerpColor(stops, (v - lo) / (hi - lo || 1));
+      const sel = r === S.years && Math.abs(c - S.kmPerYear) < 2500;
+      const txt = col.lum > 0.55 ? '#0d1a2a' : '#ffffff';
+      html += `<button type="button" class="c${sel ? ' sel' : ''}" style="background:${col.css};color:${txt}" data-y="${r}" data-k="${c}" title="${r} yr at ${c.toLocaleString('en-CA')} km/yr: ${fmt$(v)} at ${fmtKm(S.km0 + c * r)}" aria-label="${r} years at ${c.toLocaleString('en-CA')} km per year: ${fmt$(v)}">${fmtK(v)}</button>`;
+    });
+  });
+  g.innerHTML = html;
+  const bar = stops.map(s => '#' + s).join(',');
+  $('heatScale').innerHTML = `<span>${fmtK(lo)}</span><span class="bar" style="background:linear-gradient(90deg,${bar})"></span><span>${fmtK(hi)}</span><span style="margin-left:8px">Outlined: your plan</span>`;
+}
+$('heat').addEventListener('click', e => {
+  const b = e.target.closest('button.c'); if (!b) return;
+  S.years = +b.dataset.y; S.kmPerYear = +b.dataset.k; syncInputs(); schedule();
+});
+
+// ---------- stacked cost chart ----------
+function drawCost(res) {
+  const box = $('chartCost');
+  const W = Math.max(300, box.clientWidth), narrow = W < 560;
+  const H = narrow ? 250 : 300;
+  const m = { l: 52, r: 12, t: 22, b: 36 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const cats = CATS.filter(c => res.totals[c.k] > 0.5);
+  const Y = res.yearly;
+  const totals = Y.map(y => cats.reduce((a, c) => a + Math.max(0, y[c.k]), 0));
+  const { ticks } = niceTicks(Math.max(...totals) * 1.08, 4);
+  const top = ticks[ticks.length - 1];
+  const yv = v => m.t + ih - v / top * ih;
+  const band = iw / Y.length, bw = Math.min(56, band * 0.64);
+  box.querySelectorAll('svg').forEach(n => n.remove());
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Annual cost by category' });
+  box.prepend(svg);
+  const muted = cssv('--muted'), rule = cssv('--rule'), ruleS = cssv('--rule-strong'), ink = cssv('--ink');
+  for (const tv of ticks) {
+    el('line', { x1: m.l, x2: m.l + iw, y1: yv(tv), y2: yv(tv), stroke: tv === 0 ? ruleS : rule }, svg);
+    const t = el('text', { x: m.l - 8, y: yv(tv) + 4, 'text-anchor': 'end', 'font-size': 11.5, fill: muted }, svg); t.textContent = tv === 0 ? '$0' : '$' + (tv / 1000) + 'k';
+  }
+  const tip = tipFor(box);
+  Y.forEach((yr, i) => {
+    const cx = m.l + band * i + band / 2;
+    let acc = 0;
+    cats.forEach(c => {
+      const v = Math.max(0, yr[c.k]); if (v <= 0) return;
+      const y0 = yv(acc), y1 = yv(acc + v); acc += v;
+      const h = Math.max(0, y0 - y1 - 2);
+      if (h <= 0) return;
+      const r = el('rect', { x: cx - bw / 2, y: y1 + 2, width: bw, height: h, fill: cssv(c.v), rx: 1.5 }, svg);
+      r.addEventListener('pointerenter', ev => {
+        const rect = svg.getBoundingClientRect(), sc = rect.width / W;
+        tip.show(`<div class="t">Year ${yr.year} · ${fmtDate(yr.year - 1)}–${fmtDate(yr.year - 1 + yr.months / 12)}</div><div class="r"><span>${c.name}</span><span>${fmt$(v)}</span></div><div class="r"><span>Year total</span><span>${fmt$(totals[i])}</span></div>`, cx * sc, y1 * sc);
+      });
+      r.addEventListener('pointerleave', () => tip.hide());
+    });
+    const tt = el('text', { x: cx, y: yv(totals[i]) - 6, 'text-anchor': 'middle', 'font-size': narrow ? 10.5 : 11.5, fill: ink, 'font-weight': 600 }, svg);
+    tt.textContent = narrow && Y.length > 6 ? (totals[i] / 1000).toFixed(1) + 'k' : fmt$(totals[i]);
+    const lx = el('text', { x: cx, y: m.t + ih + 17, 'text-anchor': 'middle', 'font-size': 11.5, fill: muted }, svg);
+    lx.textContent = 'Yr ' + yr.year;
+    if (!narrow || Y.length <= 6) { const l2 = el('text', { x: cx, y: m.t + ih + 31, 'text-anchor': 'middle', 'font-size': 10.5, fill: muted }, svg); l2.textContent = "’" + String(dateAt(yr.year - 1 + yr.months / 12).getFullYear()).slice(2); }
+  });
+  $('costLegend').innerHTML = cats.map(c => `<span><i style="background:var(${c.v})"></i>${c.name} <b>${fmt$(res.totals[c.k])}</b></span>`).join('');
+}
+
+// ---------- cost per km bars ----------
+function drawPerKm(res) {
+  const box = $('chartPerKm');
+  const W = Math.max(280, box.clientWidth);
+  const H = 220; const m = { l: 48, r: 8, t: 20, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const Y = res.yearly;
+  const vals = Y.map(y => y.perKm);
+  const { ticks } = niceTicks(Math.max(...vals) * 1.12, 4);
+  const top = ticks[ticks.length - 1];
+  const yv = v => m.t + ih - v / top * ih;
+  const band = iw / Y.length, bw = Math.min(40, band * 0.6);
+  box.querySelectorAll('svg').forEach(n => n.remove());
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Cost per kilometre by year' });
+  box.prepend(svg);
+  const muted = cssv('--muted'), rule = cssv('--rule'), ruleS = cssv('--rule-strong'), ink = cssv('--ink'), bar = cssv('--bar'), amber = cssv('--amber');
+  for (const tv of ticks) {
+    el('line', { x1: m.l, x2: m.l + iw, y1: yv(tv), y2: yv(tv), stroke: tv === 0 ? ruleS : rule }, svg);
+    const t = el('text', { x: m.l - 8, y: yv(tv) + 4, 'text-anchor': 'end', 'font-size': 11.5, fill: muted }, svg); t.textContent = '$' + tv.toFixed(2);
+  }
+  const minI = vals.indexOf(Math.min(...vals));
+  const tip = tipFor(box);
+  Y.forEach((yr, i) => {
+    const cx = m.l + band * i + band / 2;
+    const r = el('rect', { x: cx - bw / 2, y: yv(vals[i]), width: bw, height: Math.max(0, yv(0) - yv(vals[i])), fill: i === minI && Y.length > 1 ? amber : bar, rx: 2 }, svg);
+    r.addEventListener('pointerenter', () => { const sc = svg.getBoundingClientRect().width / W; tip.show(`<div class="t">Year ${yr.year}</div><div class="r"><span>Per km</span><span>$${vals[i].toFixed(2)}</span></div><div class="r"><span>Year total</span><span>${fmt$(yr.total)}</span></div><div class="r"><span>Distance</span><span>${fmtKm(yr.km)}</span></div>`, cx * sc, yv(vals[i]) * sc); });
+    r.addEventListener('pointerleave', () => tip.hide());
+    if (Y.length <= 8 || i === minI) { const t = el('text', { x: cx, y: yv(vals[i]) - 5, 'text-anchor': 'middle', 'font-size': 11, fill: ink, 'font-weight': 600 }, svg); t.textContent = '$' + vals[i].toFixed(2); }
+    const lx = el('text', { x: cx, y: m.t + ih + 17, 'text-anchor': 'middle', 'font-size': 11.5, fill: muted }, svg); lx.textContent = 'Yr ' + yr.year;
+  });
+}
+
+// ---------- render ----------
+function render() {
+  const res = simulate(S);
+  const lucky = simulate(Object.assign({}, S, { repairShift: 1.2 })), unlucky = simulate(Object.assign({}, S, { repairShift: 0.85 }));
+  const T = S.years;
+  $('l100Out').textContent = res.L100.toFixed(1) + ' L/100 km';
+  $('odoNow').textContent = odoStr(S.km0);
+  $('odoNowV').textContent = 'Worth ' + fmt$(S.value0);
+  $('odoEndK').textContent = 'When you sell · ' + fmtDate(T);
+  $('odoEnd').textContent = odoStr(res.endKm);
+  $('odoEndV').textContent = 'Worth ' + fmt$(res.endValue);
+  const lostPct = (1 - res.endValue / S.value0) * 100;
+  $('verdict').innerHTML = `Drive <b>${S.kmPerYear.toLocaleString('en-CA')} km a year</b> for <b>${T} ${T === 1 ? 'year' : 'years'}</b> and the car should be worth about <b>${fmt$(res.endValue)}</b> in ${fmtDate(T)}, while owning it costs about <b>${fmt$(res.perMonth)} a month</b> all in.`;
+  const t = res.totals;
+  $('tiles').innerHTML = [
+    ['Worth when sold', fmt$(res.endValue), `${fmtKm(res.endKm)} · ${lostPct.toFixed(0)}% lost`],
+    ['Value lost', fmt$(t.dep), `${fmt$(t.dep / T)} a year on average`],
+    ['Total cost to own', fmt$(t.total), `Cash spent ${fmt$(t.cash)}`],
+    ['Cost per km', '$' + res.perKm.toFixed(2), `${fmtKm(res.kmDriven)} driven`],
+    ['Repairs, expected', fmt$(t.repairs), `Range ${fmt$(lucky.totals.repairs)} to ${fmt$(unlucky.totals.repairs)} by luck`],
+  ].map(([k, v, s]) => `<div class="tile"><span class="k">${k}</span><span class="v">${v}</span><span class="s">${s}</span></div>`).join('');
+
+  drawValue(res);
+  drawHeat();
+  drawCost(res);
+  drawPerKm(res);
+
+  // per-km insight
+  const Y = res.yearly;
+  const minY = Y.reduce((a, y) => (y.perKm < a.perKm ? y : a), Y[0]);
+  const upkeep = y => y.maint + y.wear + y.repairs;
+  const upYears = Y.filter(y => upkeep(y) > y.dep).length;
+  let ins = Y.length > 1 ? `Year ${minY.year} is your cheapest per kilometre at <b>$${minY.perKm.toFixed(2)}</b>. ` : '';
+  ins += upYears ? `Upkeep (service, brakes, tires and repairs) outruns depreciation in <b>${upYears} of ${Y.length}</b> years. That is typical past 10 years old: the car loses value slowly, and the bills come from keeping it running.` : `Depreciation outruns upkeep every year of this plan.`;
+  if (S.kmPerYear < 8000) ins += ' At low distance, fixed costs like insurance and time-based service push the per-km cost up.';
+  $('perKmInsight').innerHTML = ins;
+
+  // split table
+  const rows = [
+    ['Fuel', t.fuel, `${Math.round(t.fuelL).toLocaleString('en-CA')} L of premium`],
+    ['Scheduled service', t.maint, 'Oil, filters, fluids, plugs, battery'],
+    ['Brakes & tires', t.wear, 'Pads, rotors, tire sets'],
+    ['Repairs (expected)', t.repairs, 'Probability-weighted'],
+  ];
+  if (S.inclInsurance) rows.push(['Insurance', t.insurance, '+3% a year']);
+  let html = '<thead><tr><th>Item</th><th>Amount</th><th>Share</th></tr></thead><tbody>';
+  for (const [n, v, note] of rows) html += `<tr><td>${n}<div class="hint" style="font-family:var(--font-body)">${note}</div></td><td>${fmt$(v)}</td><td>${(v / t.total * 100).toFixed(0)}%</td></tr>`;
+  html += `<tr><td><b style="font-family:var(--font-body)">Cash out of pocket</b></td><td><b>${fmt$(t.cash)}</b></td><td>${(t.cash / t.total * 100).toFixed(0)}%</td></tr>`;
+  html += `<tr><td>Depreciation<div class="hint" style="font-family:var(--font-body)">${fmt$(S.value0)} → ${fmt$(res.endValue)}</div></td><td>${fmt$(t.dep)}</td><td>${(t.dep / t.total * 100).toFixed(0)}%</td></tr>`;
+  if (t.capital > 0) html += `<tr><td>Money tied up</td><td>${fmt$(t.capital)}</td><td>${(t.capital / t.total * 100).toFixed(0)}%</td></tr>`;
+  html += `</tbody><tfoot><tr><td>Total cost to own</td><td>${fmt$(t.total)}</td><td>100%</td></tr></tfoot>`;
+  $('splitTbl').innerHTML = html;
+
+  // repairs
+  const reps = res.repairs.slice().sort((a, b) => b.exp - a.exp);
+  let rh = '<div class="rep-row hdr"><span>Repair</span><span>Chance in your plan</span><span class="c">If it happens</span><span class="e">Expected</span></div>';
+  for (const r of reps) {
+    const pc = Math.round(r.prob * 100);
+    rh += `<div class="rep-row${r.isNew ? ' is-new' : ''}"><div><div class="nm">${esc(r.name)}</div><div class="nt">${esc(r.note)}</div><label class="fixed"><input type="checkbox" id="done-${r.id}" data-id="${r.id}"${S.done[r.id] ? ' checked' : ''}> Already replaced</label></div>`
+      + `<div class="pbar"><span class="track"><span class="fill" style="width:${pc}%;display:block"></span></span><span>${pc}%</span></div>`
+      + `<div class="c">${fmt$(r.cost)}</div><div class="e">${fmt$(r.exp)}</div></div>`;
+  }
+  $('repList').innerHTML = rh;
+
+  // service done checklist + log
+  const doneable = [['plug', 'Spark plugs'], ['cool', 'Coolant flush'], ['trans', 'Transmission fluid'], ['xdr', 'Transfer case + diff fluids'], ['batt', 'Battery'], ['brkF', 'Front brakes'], ['brkR', 'Rear brakes'], ['tireS', 'Summer/all-season tires'], ['tireW', 'Winter tires']];
+  $('svcDone').innerHTML = doneable.filter(([id]) => id !== 'tireW' || S.winterTires).map(([id, n]) => `<label class="check"><input type="checkbox" id="done-${id}" data-id="${id}"${S.done[id] ? ' checked' : ''}><span>${n}</span></label>`).join('');
+  const ev = res.events.slice().sort((a, b) => a.t - b.t || a.km - b.km);
+  const shown = ev.slice(0, 40);
+  $('svcList').innerHTML = shown.map(e => `<div class="svc"><span class="d">${fmtDate(e.t)}</span><span class="km">${fmtKm(e.km)}</span><span class="nm"><i style="background:var(${e.cat === 'wear' ? '--c-wear' : '--c-maint'})"></i><span>${esc(e.name)}</span></span><span class="co">${fmt$(e.cost)}</span></div>`).join('')
+    + (ev.length > shown.length ? `<div class="hint" style="padding-top:8px">${ev.length - shown.length} more services later in the plan.</div>` : '');
+
+  // year table (table view of the charts)
+  let yt = '<thead><tr><th>Year</th><th>Odometer</th><th>Worth at end</th><th>Value lost</th><th>Fuel</th><th>Service</th><th>Brakes & tires</th><th>Repairs</th>' + (S.inclInsurance ? '<th>Insurance</th>' : '') + (S.oppRate > 0 ? '<th>Money tied up</th>' : '') + '<th>Total</th><th>Per km</th></tr></thead><tbody>';
+  for (const y of Y) yt += `<tr><td>${y.year} · ${fmtDate(y.year - 1 + y.months / 12)}</td><td>${fmtKm(y.endKm)}</td><td>${fmt$(y.endValue)}</td><td>${fmt$(y.dep)}</td><td>${fmt$(y.fuel)}</td><td>${fmt$(y.maint)}</td><td>${fmt$(y.wear)}</td><td>${fmt$(y.repairs)}</td>` + (S.inclInsurance ? `<td>${fmt$(y.insurance)}</td>` : '') + (S.oppRate > 0 ? `<td>${fmt$(y.capital)}</td>` : '') + `<td>${fmt$(y.total)}</td><td>$${y.perKm.toFixed(2)}</td></tr>`;
+  yt += `</tbody><tfoot><tr><td>Total</td><td>${fmtKm(res.kmDriven)} driven</td><td>${fmt$(res.endValue)}</td><td>${fmt$(t.dep)}</td><td>${fmt$(t.fuel)}</td><td>${fmt$(t.maint)}</td><td>${fmt$(t.wear)}</td><td>${fmt$(t.repairs)}</td>` + (S.inclInsurance ? `<td>${fmt$(t.insurance)}</td>` : '') + (S.oppRate > 0 ? `<td>${fmt$(t.capital)}</td>` : '') + `<td>${fmt$(t.total)}</td><td>$${res.perKm.toFixed(2)}</td></tr></tfoot>`;
+  $('yearTbl').innerHTML = yt;
+}
+document.addEventListener('change', e => {
+  const cb = e.target.closest('input[type=checkbox][data-id]'); if (!cb) return;
+  S.done = Object.assign({}, S.done, { [cb.dataset.id]: cb.checked });
+  schedule();
+});
+
+// Re-render charts on resize and theme change
+let rt = 0;
+const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(render, 80); });
+ro.observe($('chartValue'));
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => render()); } catch (e) {}
+new MutationObserver(() => render()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+syncInputs();
+render();
+</script>
+
+</body></html>
